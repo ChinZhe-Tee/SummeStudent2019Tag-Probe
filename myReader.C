@@ -47,8 +47,6 @@
 
 void myReader::Loop()
 {
-    
-
    TFile *myfile = new TFile("invM.root","recreate");
    TH1F *invM = new TH1F("invM","Invariant Mass of Z costructed from T&P Muons",100,0,180);
    TH1F *delta_R= new TH1F("delta_R","#Delta R of probe muons and tracks ",100,0,6);
@@ -57,7 +55,7 @@ void myReader::Loop()
    if (fChain == 0) return;
    Long64_t nentries = fChain->GetEntriesFast(); 
    Long64_t nbytes = 0, nb = 0;
-
+    //trythis;
 
    double dR;
    TLorentzVector gMuon , sMuon, Zboson, track ;
