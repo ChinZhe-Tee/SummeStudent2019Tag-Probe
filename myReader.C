@@ -47,11 +47,13 @@
 
 void myReader::Loop()
 {
+    //testing123git stat
 
    TFile *myfile = new TFile("invM.root","recreate");
    TH1F *invM = new TH1F("invM","Invariant Mass of Z costructed from T&P Muons",100,0,180);
    TH1F *delta_R= new TH1F("delta_R","#Delta R of probe muons and tracks ",100,0,6);
    TCanvas *c1 = new TCanvas("c1", "Z boson invM",800,600);
+   TCanvas *c2 = new TCanvas("c2", "#Delta R of probe and track",800,600);
    if (fChain == 0) return;
    Long64_t nentries = fChain->GetEntriesFast(); 
    Long64_t nbytes = 0, nb = 0;
@@ -64,7 +66,8 @@ void myReader::Loop()
    double numberofZ=0 ;
    double numberofZ_withMatchedProbe = 0;
    
-   for (Long64_t jentry=0; jentry<nentries;jentry++) {
+   for (Long64_t jentry=0; jentry<nentries;jentry++) 
+   {
      Long64_t ientry = LoadTree(jentry); 
      
      if (ientry < 0) break;
@@ -81,29 +84,48 @@ void myReader::Loop()
      double MaxElement = *std::max_element(tree_globalMuon_pt->begin(), tree_globalMuon_pt->end());
      gMuon.SetPtEtaPhiM( (*tree_globalMuon_pt)[MaxElementIndex],  (*tree_globalMuon_eta)[MaxElementIndex],  (*tree_globalMuon_phi)[MaxElementIndex] , 0);
      // loop the event with ALL stA Muon
-     for ( unsigned int j = 0 ;  j < tree_staMuon_pt ->size()  ; j++){
+     for ( unsigned int j = 0 ;  j < tree_staMuon_pt ->size()  ; j++)
+     {
        if ( (*tree_staMuon_pt)[j]< 15.) continue; 
        sMuon.SetPtEtaPhiM( tree_staMuon_pt->at(j), tree_staMuon_eta->at(j), tree_staMuon_phi->at(j), 0);
        deltaR = gMuon.DeltaR(sMuon);
-       if (deltaR >0.5) {
-	 Zboson = gMuon + sMuon;
-	 theInvariantMass =Zboson.M();
+       if (deltaR >0.5) 
+       {
+	      Zboson = gMuon + sMuon;
+	      theInvariantMass =Zboson.M();
+        invM->Fill(theInvariantMass);
        }
        if (  theInvariantMass >=86 &&  theInvariantMass  <= 101 ) {numberofZ = numberofZ+1;};
        break;
      }
      
      //  select the stA from the Z mass windows and associate them with track such that dR < 0.1
-     if (  theInvariantMass >=86 &&  theInvariantMass  <= 101 ) {
-       for (unsigned int k =0 ;k< tree_track_pt->size() ;k++) {
-	 if((*tree_track_pt)[k] < 15.)  continue;
-	 track.SetPtEtaPhiM( (*tree_track_pt)[k], (*tree_track_eta)[k], (*tree_track_phi)[k],0);
-	 dR= sMuon.DeltaR(track);
-	 if(dR< 0.1)  {numberofZ_withMatchedProbe = numberofZ_withMatchedProbe+1;};
+     if (  theInvariantMass >=86 &&  theInvariantMass  <= 101 ) 
+     {
+       for (unsigned int k =0 ;k< tree_track_pt->size() ;k++) 
+       {
+	      if((*tree_track_pt)[k] < 15.)  continue;
+	      track.SetPtEtaPhiM( (*tree_track_pt)[k], (*tree_track_eta)[k], (*tree_track_phi)[k],0);
+	      dR= sMuon.DeltaR(track);
+        delta_R->Fill(dR);
+	      if(dR< 0.1)  {numberofZ_withMatchedProbe = numberofZ_withMatchedProbe+1;};
        } 
      }
-   } 
+   }
+
    cout << numberofZ << ";" << numberofZ_withMatchedProbe << endl;
    double efficiency = numberofZ_withMatchedProbe /numberofZ;
    cout << "Efficiency : " << efficiency << endl;
+
+  myfile->WriteTObject(c1);
+  myfile->WriteTObject(c2);
+  myfile->Draw();
+  c1->SaveAs("invM_ZBoson.pdf","pdf");
+  invM->Draw();
+  c2->SaveAs("deltaR_probe_track.pdf","pdf");
+  delta_R->Draw();
+
+ 
+
+
 } 
